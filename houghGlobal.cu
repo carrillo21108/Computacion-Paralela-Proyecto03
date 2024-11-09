@@ -75,3 +75,24 @@ __global__ void GPU_HoughTran(unsigned char *pic, int w, int h, int *acc, float 
         }
     }
 }
+
+int main (int argc, char **argv)
+{
+  float *pcCos = (float *)malloc(sizeof(float) * degreeBins);
+    float *pcSin = (float *)malloc(sizeof(float) * degreeBins);
+    float rad = 0;
+    for (int i = 0; i < degreeBins; i++) {
+        pcCos[i] = cos(rad);
+        pcSin[i] = sin(rad);
+        rad += radInc;
+    }
+
+    float rMax = sqrt(1.0 * w * w + 1.0 * h * h) / 2;
+    float rScale = 2 * rMax / rBins;
+
+    cudaMemcpy(d_Cos, pcCos, sizeof(float) * degreeBins, cudaMemcpyHostToDevice);
+    cudaMemcpy(d_Sin, pcSin, sizeof(float) * degreeBins, cudaMemcpyHostToDevice);
+
+
+  return 0;
+}
