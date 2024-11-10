@@ -115,6 +115,13 @@ int main (int argc, char **argv)
 
     printf("GPU Time: %f ms\n", milliseconds);
 
+    int threshold = thresholdCalculus(h_hough);
+    for (i = 0; i < degreeBins * rBins; i++) {
+        if (cpuht[i] != h_hough[i])
+            printf("Mismatch at %d: CPU=%d, GPU=%d\n", i, cpuht[i], h_hough[i]);
+    }
+
+    drawImage("houghGlobalGPU.jpg", inImg, w, h, threshold, h_hough, rScale, rMax);
 
 
   return 0;
