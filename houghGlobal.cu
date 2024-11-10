@@ -93,6 +93,29 @@ int main (int argc, char **argv)
     cudaMemcpy(d_Cos, pcCos, sizeof(float) * degreeBins, cudaMemcpyHostToDevice);
     cudaMemcpy(d_Sin, pcSin, sizeof(float) * degreeBins, cudaMemcpyHostToDevice);
 
+    cudaMalloc((void **)&d_in, sizeof(unsigned char) * w * h);
+    
+    cudaMalloc((void **)&d_hough, sizeof(int) * degreeBins * rBins);
+    cudaMemcpy(d_in, inImg.pixels, sizeof(unsigned char) * w * h, cudaMemcpyHostToDevice);
+    cudaMemset(d_hough, 0, sizeof(int) * degreeBins * rBins);
+
+    int blockNum = ceil(w * h / 256);
+    cudaEvent_t start, stop;
+    cudaEventCreate(&start);
+    cudaEventCreate(&stop);
+    cudaEventRecord(start);
+
+    GPU_HoughTran<<<blockNum, 256>>>(d_in, w, h, d_hough, rMax, rScale, d_Cos, d_Sin);
+
+    cudaEventRecord(stop);
+    cudaEventSynchronize(stop);
+
+    float milliseconds = 0;
+    cudaEventElapsedTime(&milliseconds, start, stop);
+
+    printf("GPU Time: %f ms\n", milliseconds);
+
+
 
   return 0;
 }
