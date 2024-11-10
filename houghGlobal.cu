@@ -123,6 +123,15 @@ int main (int argc, char **argv)
 
     drawImage("houghGlobalGPU.jpg", inImg, w, h, threshold, h_hough, rScale, rMax);
 
+    free(cpuht);
+    free(pcCos);
+    free(pcSin);
+    free(h_hough);
+
+    cudaFree(d_Cos);
+    cudaFree(d_Sin);
+    cudaFree(d_in);
+    cudaFree(d_hough);
 
   return 0;
 }
