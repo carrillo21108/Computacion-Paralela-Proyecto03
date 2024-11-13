@@ -76,3 +76,27 @@ __global__ void GPU_HoughTran(unsigned char *pic, int w, int h, int *acc, float 
     }
 }
 
+__constant__ double d_Cos[degreeBins];
+__constant__ double d_Sin[degreeBins];
+
+__global__ void GPU_HoughTranConst(unsigned char *pic, int w, int h, int *acc, float rMax, float rScale) {
+    int gloID = blockIdx.x * blockDim.x + threadIdx.x;
+    if (gloID >= w * h) return;
+
+    int xCent = w / 2;
+    int yCent = h / 2;
+
+    int xCoord = gloID % w - xCent;
+    int yCoord = yCent - gloID / w;
+
+    if (pic[gloID] > 0) {
+        for (int tIdx = 0; tIdx < degreeBins; tIdx++) {
+            double r = xCoord * d_Cos[tIdx] + yCoord * d_Sin[tIdx];
+            int rIdx = (int)((r + rMax) / rScale + 0.5);
+            if (rIdx >= 0 && rIdx < rBins) {
+                atomicAdd(&acc[rIdx * degreeBins + tIdx], 1);
+            }
+        }
+    }
+}
+
