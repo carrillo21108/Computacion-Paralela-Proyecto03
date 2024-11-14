@@ -100,3 +100,39 @@ __global__ void GPU_HoughTranConst(unsigned char *pic, int w, int h, int *acc, f
     }
 }
 
+int main(int argc, char **argv) {
+    PGMImage inImg(argv[1]);
+    int *cpuht;
+    int w = inImg.x_dim;
+    int h = inImg.y_dim;
+
+    CPU_HoughTran(inImg.pixels, w, h, &cpuht);
+
+    double *pcCos = (double *)malloc(sizeof(double) * degreeBins);
+    double *pcSin = (double *)malloc(sizeof(double) * degreeBins);
+    float rad = 0;
+    for (int i = 0; i < degreeBins; i++) {
+        pcCos[i] = cos(rad);
+        pcSin[i] = sin(rad);
+        rad += radInc;
+    }
+
+    float rMax = sqrt(1.0 * w * w + 1.0 * h * h) / 2;
+    float rScale = 2 * rMax / rBins;
+
+    cudaMemcpyToSymbol(d_Cos, pcCos, sizeof(double) * degreeBins);
+    cudaMemcpyToSymbol(d_Sin, pcSin, sizeof(double) * degreeBins);
+
+    unsigned char *d_in;
+    int *d_hough;
+
+    cudaMalloc(&d_in, sizeof(unsigned char) * w * h);
+    cudaMalloc(&d_hough, sizeof(int) * degreeBins * rBins);
+
+    cudaMemcpy(d_in, inImg.pixels, sizeof(unsigned char) * w * h, cudaMemcpyHostToDevice);
+    cudaMemset(d_hough, 0, sizeof(int) * degreeBins * rBins);
+
+    int blockNum = ceil(w * h / 256);
+    GPU_HoughTranConst<<<blockNum, 256>>>(d_in, w, h, d_hough, rMax, rScale);
+}
+
