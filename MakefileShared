@@ -1,0 +1,22 @@
+# the executable name
+TARGET = houghShared
+SRC = houghShared.cu
+
+all: pgm.o $(TARGET) run
+
+$(TARGET): $(SRC) pgm.o
+	nvcc $(SRC) pgm.o -o $(TARGET) -I/usr/include/opencv4 -L/usr/lib -lopencv_core -lopencv_imgcodecs -lopencv_highgui -lopencv_imgproc
+
+pgm.o:	common/pgm.cpp
+	g++ -c common/pgm.cpp -o ./pgm.o -I/usr/include/opencv4 -L/usr/lib -lopencv_core -lopencv_imgcodecs -lopencv_highgui -lopencv_imgproc
+
+# Rule to run the executable with 4 processes
+run: $(TARGET)
+	./$(TARGET) runway.pgm
+
+# Clean the directory by removing the compiled executable
+clean:
+	rm -f $(TARGET)
+	rm -f pgm.o
+	rm -f $(TARGET)CPU.jpg
+	rm -f $(TARGET)GPU.jpg
