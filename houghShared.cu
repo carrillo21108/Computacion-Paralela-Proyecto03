@@ -87,10 +87,35 @@ __constant__ double d_Sin[degreeBins];
 
 //*****************************************************************
 //TODO Kernel memoria compartida
-// __global__ void GPU_HoughTranShared(...)
-// {
-//   //TODO
-// }
+__global__ void GPU_HoughTran_Shared(unsigned char *pic, int w, int h, int *acc, double rMax, double rScale) 
+{
+  //TODO
+    extern __shared__ int localAcc[]; // Acumulador local en memoria compartida
+    int gloID = blockIdx.x * blockDim.x + threadIdx.x; // Identificador global del hilo
+    int tIdx = threadIdx.x; // Identificador local del hilo
+    if (tIdx < degreeBins) { // Inicializar el acumulador local
+        for (int rIdx = 0; rIdx < rBins; rIdx++) {
+            localAcc[rIdx * degreeBins + tIdx] = 0;
+        }
+    }
+    __syncthreads(); // Sincronizar los hilos del bloque
+    int xCent = w / 2; // El centro en x
+    int yCent = h / 2; // El centro en y
+    if (gloID < w * h && pic[gloID] > 0) {
+        int xCoord = gloID % w - xCent;
+        int yCoord = yCent - gloID / w;
+
+        // Iterar sobre todos los ángulos de theta
+        for (int tIdx = 0; tIdx < degreeBins; tIdx++) {
+            double r = xCoord * d_Cos[tIdx] + yCoord * d_Sin[tIdx];
+            int rIdx = (int)((r + rMax) / rScale + 0.5);
+            if (rIdx >= 0 && rIdx < rBins) {
+                atomicAdd (acc + (rIdx * degreeBins + tIdx), 1); // Usar operación atómica para acumulador
+            }
+        }
+    }
+    
+}
 //TODO Kernel memoria Constante
 __global__ void GPU_HoughTranConst(unsigned char *pic, int w, int h, int *acc, float rMax, float rScale){
     // Global thread index
@@ -211,13 +236,14 @@ int main(int argc, char **argv)
     // execution configuration uses a 1-D grid of 1-D blocks, each made of 256 threads
     //1 thread por pixel
     int blockNum = ceil (w * h / 256);
+    size_t sharedMemSize = degreeBins * rBins * sizeof(int);
     // Cuda events to measure time
     cudaEvent_t start, stop; // Crear eventos para medir tiempo
     cudaEventCreate(&start); // Crear evento de inicio
     cudaEventCreate(&stop); // Crear evento de fin
     cudaEventRecord(start); // Empezar a medir tiempo
     // GPU calculation
-    GPU_HoughTranConst <<< blockNum, 256 >>> (d_in, w, h, d_hough, rMax, rScale); // Llamar al kernel de la GPU y ejecutarlo para calculo de acumulador
+    GPU_HoughTran_Shared <<< blockNum, 256, sharedMemSize >>> (d_in, w, h, d_hough, rMax, rScale); // Llamar al kernel de la GPU y ejecutarlo para calculo de acumulador
     cudaEventRecord(stop); // Terminar de medir tiempo
     // get results from device
     cudaMemcpy (h_hough, d_hough, sizeof (int) * degreeBins * rBins, cudaMemcpyDeviceToHost); // Copiar el acumulador de la GPU a la CPU
@@ -238,7 +264,7 @@ int main(int argc, char **argv)
     int threshold = thresholdCalculus(h_hough); // Calcular umbral
 
     // Dibujar la imagen
-    drawImage("houghConstantGPU.jpg", inImg, w, h, threshold, h_hough, rScale, rMax); // Dibujar imagen con el acumulador de la GPU
+    drawImage("houghSharedGPU.jpg", inImg, w, h, threshold, h_hough, rScale, rMax); // Dibujar imagen con el acumulador de la GPU
 
     // Liberación de memoria
     free(cpuht);
