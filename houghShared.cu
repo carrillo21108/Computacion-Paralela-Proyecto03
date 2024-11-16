@@ -114,7 +114,13 @@ __global__ void GPU_HoughTran_Shared(unsigned char *pic, int w, int h, int *acc,
             }
         }
     }
-    
+    __syncthreads(); // Sincronizar los hilos del bloque
+    // Transferir los datos del acumulador local al acumulador global en memoria compartida
+    if (tIdx < degreeBins) {
+        for (int rIdx = 0; rIdx < rBins; rIdx++) {
+            atomicAdd(&acc[rIdx * degreeBins + tIdx], localAcc[rIdx * degreeBins + tIdx]);
+        }
+    }
 }
 //TODO Kernel memoria Constante
 __global__ void GPU_HoughTranConst(unsigned char *pic, int w, int h, int *acc, float rMax, float rScale){
