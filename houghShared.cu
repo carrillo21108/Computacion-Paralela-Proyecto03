@@ -110,7 +110,7 @@ __global__ void GPU_HoughTran_Shared(unsigned char *pic, int w, int h, int *acc,
             double r = xCoord * d_Cos[tIdx] + yCoord * d_Sin[tIdx];
             int rIdx = (int)((r + rMax) / rScale + 0.5);
             if (rIdx >= 0 && rIdx < rBins) {
-                atomicAdd (acc + (rIdx * degreeBins + tIdx), 1); // Usar operación atómica para acumulador
+                atomicAdd(&localAcc[rIdx * degreeBins + tIdx], 1); // Usar operación atómica para acumulador
             }
         }
     }
