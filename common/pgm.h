@@ -16,5 +16,5 @@ class PGMImage
    int num_colors;
    unsigned char *pixels;
 };
-void drawImage(char *outputFileName, PGMImage image, int w, int h, int threshold, int *acc, double rScale, double rMax);
+void drawImage(char *outputFileName, unsigned char* pixels, int w, int h, int threshold, int *acc, double rScale, double rMax);
 #endif

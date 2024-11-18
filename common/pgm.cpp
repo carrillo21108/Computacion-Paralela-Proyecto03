@@ -145,26 +145,25 @@ resultImage: imagen de salida
 w: ancho de la imagen
 h: alto de la imagen
 */
-unsigned char* drawOriginalImage(PGMImage originalImage, unsigned char * resultImage, int w, int h){
+void drawOriginalImage(unsigned char* pixels, unsigned char * resultImage, int w, int h){
   for (int i = 0; i < w * h; i++){
-   unsigned char pixel = originalImage.pixels[i];
+   unsigned char pixel = pixels[i];
     resultImage[3*i] = pixel;
     resultImage[3*i + 1] = pixel;
     resultImage[3*i + 2] = pixel;
   }
-  return resultImage;
 }
 /*
 Funcion para dibujar la imagen con las lineas detectadas
 */
-void drawImage(char *outputFileName, PGMImage image, int w, int h, int threshold, int *acc, double rScale, double rMax){
+void drawImage(char *outputFileName, unsigned char* pixels, int w, int h, int threshold, int *acc, double rScale, double rMax){
   unsigned char *resultImage = (unsigned char *)malloc(w * h * 3 * sizeof(unsigned char)); 
   if (!resultImage) {
     fprintf(stderr, "Failed to allocate memory for resultImage.\n");
     return;
   }
 
-  resultImage = drawOriginalImage(image, resultImage, w, h); 
+  drawOriginalImage(pixels, resultImage, w, h); 
 
   // Safeguard for valid accumulator and threshold
   if (acc != nullptr && threshold >= 0) {
@@ -181,5 +180,5 @@ void drawImage(char *outputFileName, PGMImage image, int w, int h, int threshold
     cv::imwrite(outputFileName, img);
   }
 
-  free(resultImage); // Free the allocated memory
+  delete[] resultImage; // Free the allocated memory
 }

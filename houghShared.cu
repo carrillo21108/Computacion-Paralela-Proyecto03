@@ -87,6 +87,15 @@ __constant__ double d_Sin[degreeBins];
 
 //*****************************************************************
 //TODO Kernel memoria compartida
+/*
+Funcion para calcular la transformada de Hough en GPU con memoria compartida
+pic: imagen en escala de grises
+w: ancho de la imagen
+h: alto de la imagen
+acc: acumulador
+rMax: radio maximo
+rScale: escala del radio
+*/
 __global__ void GPU_HoughTran_Shared(unsigned char *pic, int w, int h, int *acc, double rMax, double rScale) 
 {
   //TODO
@@ -242,7 +251,7 @@ int main(int argc, char **argv)
     // execution configuration uses a 1-D grid of 1-D blocks, each made of 256 threads
     //1 thread por pixel
     int blockNum = ceil (w * h / 256);
-    size_t sharedMemSize = degreeBins * rBins * sizeof(int);
+    size_t sharedMemSize = degreeBins * rBins * sizeof(int); // Tamaño de memoria compartida: sharedMemSize calcula cuánto espacio será necesario en la memoria compartida por bloque para el acumulador local
     // Cuda events to measure time
     cudaEvent_t start, stop; // Crear eventos para medir tiempo
     cudaEventCreate(&start); // Crear evento de inicio
@@ -270,7 +279,7 @@ int main(int argc, char **argv)
     int threshold = thresholdCalculus(h_hough); // Calcular umbral
 
     // Dibujar la imagen
-    drawImage("houghSharedGPU.jpg", inImg, w, h, threshold, h_hough, rScale, rMax); // Dibujar imagen con el acumulador de la GPU
+    drawImage("houghSharedGPU.jpg", inImg.pixels, w, h, threshold, h_hough, rScale, rMax); // Dibujar imagen con el acumulador de la GPU
 
     // Liberación de memoria
     free(cpuht);
