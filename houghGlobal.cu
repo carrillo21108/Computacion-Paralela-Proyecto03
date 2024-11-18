@@ -1,3 +1,13 @@
+/*
+ ============================================================================
+ Author        : G. Barlas
+ Version       : 1.0
+ Last modified : December 2014
+ License       : Released under the GNU GPL 3.0
+ Description   :
+ To build use  : make
+ ============================================================================
+ */
 // Importar librerías
 #include <stdio.h>
 #include <stdlib.h>
@@ -229,8 +239,7 @@ int main (int argc, char **argv)
   int threshold = thresholdCalculus(h_hough); // Calcular umbral
 
   // Dibujar la imagen
-  drawImage("houghGlobalGPU.jpg", inImg, w, h, threshold, h_hough, rScale, rMax); // Dibujar imagen con el acumulador de la GPU
-
+  drawImage("houghGlobalGPU.jpg", inImg.pixels, w, h, threshold, h_hough, rScale, rMax); // Dibujar imagen con el acumulador de la GPU
   // Liberación de memoria
   free(cpuht);
   free(pcCos);
@@ -241,6 +250,5 @@ int main (int argc, char **argv)
   cudaFree(d_Sin);
   cudaFree(d_in);
   cudaFree(d_hough);
-
   return 0;
 }
