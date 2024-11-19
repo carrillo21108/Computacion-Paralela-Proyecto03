@@ -238,6 +238,7 @@ int main(int argc, char **argv)
     int threshold = thresholdCalculus(h_hough); // Calcular umbral
 
     // Dibujar la imagen
+    drawImage("houghConstantCPU.jpg", inImg.pixels, w, h, threshold, cpuht, rScale, rMax); // Dibujar imagen con el acumulador de la CPU
     drawImage("houghConstantGPU.jpg", inImg.pixels, w, h, threshold, h_hough, rScale, rMax); // Dibujar imagen con el acumulador de la GPU
 
     // Liberación de memoria
